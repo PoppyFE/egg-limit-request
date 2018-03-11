@@ -18,14 +18,14 @@ module.exports = (options = {}) => {
 
     let ipAddress = '';
     if (config.limitRequest.ipEnable) {
-      if (options.hasOwnProperty('ipEnable') && options.ipEnable) {
+      if (!options.hasOwnProperty('ipEnable') || options.ipEnable) {
         ipAddress = (ctx.ips && ctx.ips.length ? ctx.ips.join('-') : undefined) || ctx.ip || '';
       }
     }
 
     let userId = '';
     if (config.limitRequest.userIdEnable) {
-      if (options.hasOwnProperty('userIdEnable') && options.userIdEnable) {
+      if (!options.hasOwnProperty('userIdEnable') || options.userIdEnable) {
         const userIdProp = options.userId || config.limitRequest.userId;
         if (typeof userIdProp === 'function') {
           userId = userIdProp(ctx) || '';
@@ -41,7 +41,7 @@ module.exports = (options = {}) => {
 
     let deviceId = '';
     if (config.limitRequest.deviceIdEnable) {
-      if (options.hasOwnProperty('deviceIdEnable') && options.deviceIdEnable) {
+      if (!options.hasOwnProperty('deviceIdEnable') || options.deviceIdEnable) {
         deviceId = request.headers['device-uuid'] || '';
       }
     }
