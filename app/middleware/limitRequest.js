@@ -1,13 +1,14 @@
 'use strict';
 
 const ms = require('ms');
-const URL = require('url');
 
 module.exports = (options) => {
-  const limitTime = options.limitTime ? ms(options.limitTime) || 1000;
   const prefix = options.prefix || 'limit';
 
   return async function(ctx, next) {
+    let limitTime = options.limitTime || ctx.app.config.limitRequest.limitTime || '5m';
+    limitTime = ms(limitTime);
+
     const { logger } = ctx;
     const { redis, config } = ctx.app;
     if (!redis) {
