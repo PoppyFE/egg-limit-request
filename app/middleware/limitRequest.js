@@ -52,7 +52,7 @@ module.exports = (options = {}) => {
     const currentTime = new Date().getTime();
     if ((currentTime - lastTime) < limitTime) {
       logger.info(`校验 ${redisKey} 请求, 被限频不通过`);
-      this.formatFailResp({ errCode: 'F429', msg: options.errorMsg || config.limitRequest.errorMsg });
+      ctx.formatFailResp({ errCode: 'F429', msg: options.errorMsg || config.limitRequest.errorMsg });
       return;
     }
 
