@@ -2,14 +2,14 @@
 
 const ms = require('ms');
 
-module.exports = (options) => {
+module.exports = options => {
   const prefix = options.prefix || 'limit';
 
   return async function(ctx, next) {
     let limitTime = options.limitTime || ctx.app.config.limitRequest.limitTime || '5m';
     limitTime = ms(limitTime);
 
-    const { logger } = ctx;
+    const { logger, request } = ctx;
     const { redis, config } = ctx.app;
     if (!redis) {
       logger.warn('没有redis');
@@ -27,7 +27,7 @@ module.exports = (options) => {
     let userId = '';
     if (config.limitRequest.userIdEnable) {
       if (options.hasOwnProperty('userIdEnable') && options.userIdEnable) {
-        let userIdProp = options.userId || config.limitRequest.userId;
+        const userIdProp = options.userId || config.limitRequest.userId;
         if (typeof userIdProp === 'function') {
           userId = userIdProp(ctx) || '';
         } else if (userIdProp === 'accessData') {
@@ -49,11 +49,11 @@ module.exports = (options) => {
 
     const redisKey = `${prefix}:${ipAddress}:${deviceId}:${userId}:${request.method}:${request.path}`;
 
-    const lastTime = yield redis.get(redisKey);
+    const lastTime = await redis.get(redisKey);
     const currentTime = new Date().getTime();
     if ((currentTime - lastTime) < limitTime) {
       logger.info(`校验 ${redisKey} 请求, 被限频不通过`);
-      this.formatFailResp({errCode: 'F429', msg: options.errorMsg || config.limitRequest.errorMsg });
+      this.formatFailResp({ errCode: 'F429', msg: options.errorMsg || config.limitRequest.errorMsg });
       return;
     }
 
