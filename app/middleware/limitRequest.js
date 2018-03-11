@@ -3,9 +3,8 @@
 const ms = require('ms');
 
 module.exports = options => {
-  const prefix = options.prefix || 'limit';
-
   return async function(ctx, next) {
+    const prefix = ctx.app.config.limitRequest.redisPrefix || 'limit';
     let limitTime = options.limitTime || ctx.app.config.limitRequest.limitTime || '5m';
     limitTime = ms(limitTime);
 

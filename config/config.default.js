@@ -6,6 +6,7 @@
  * @property {String} SOME_KEY - some description
  */
 exports.limitRequest = {
+  redisPrefix: 'limit',
   limitTime: '5m',
   ipEnable: true,
   userIdEnable: true,
