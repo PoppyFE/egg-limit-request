@@ -26,15 +26,15 @@ module.exports = (options) => {
     let userId = '';
     if (config.limitRequest.userIdEnable) {
       if (options.hasOwnProperty('userIdEnable') && options.userIdEnable) {
-        let userIdFn = options.userIdFn || config.limitRequest.userIdFn;
-
-        if (typeof userIdFn === 'function') {
-          userId = userIdFn(ctx) || '';
-        } else {
-          userId = (request.accessData ? request.accessData.id : '') ||
-            (request.authData ? request.authData.id : '') ||
-            query.user_name ||
-            (request.body ? request.body.user_name : '');
+        let userIdProp = options.userId || config.limitRequest.userId;
+        if (typeof userIdProp === 'function') {
+          userId = userIdProp(ctx) || '';
+        } else if (userIdProp === 'accessData') {
+          userId = (request.accessData ? request.accessData.id : '');
+        } else if (userIdProp === 'authData') {
+          userId = request.authData ? request.authData.id : '';
+        } else if (typeof userIdProp === 'string') {
+          userId = request.query[userIdProp] || request.body[userIdProp] || '';
         }
       }
     }
