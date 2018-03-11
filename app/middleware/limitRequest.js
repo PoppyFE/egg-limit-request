@@ -50,8 +50,9 @@ module.exports = (options = {}) => {
 
     const lastTime = await redis.get(redisKey);
     const currentTime = new Date().getTime();
-    if ((currentTime - lastTime) < limitTime) {
-      logger.info(`校验 ${redisKey} 请求, 被限频不通过 limitTime: ${limitTime} currentTime: ${currentTime} lastTime: ${lastTime}`);
+    const timePassed = currentTime - lastTime;
+    if (timePassed < limitTime) {
+      logger.info(`校验 ${redisKey} 请求, 被限频不通过 limitTime: ${limitTime} timePassed: ${timePassed}`);
       ctx.formatFailResp({ errCode: 'F429', msg: options.errorMsg || config.limitRequest.errorMsg });
       return;
     }
