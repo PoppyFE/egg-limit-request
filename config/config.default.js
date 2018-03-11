@@ -8,5 +8,6 @@
 exports.limitRequest = {
   ipEnable: true,
   userIdEnable: true,
+  deviceIdEnable: true,
   errorMsg: undefined,
 };

@@ -19,7 +19,7 @@ module.exports = (options) => {
     let ipAddress = '';
     if (config.limitRequest.ipEnable) {
       if (options.hasOwnProperty('ipEnable') && options.ipEnable) {
-        ipAddress = (ctx.ips && ctx.ips.length ? ctx.ips.join('-') : '') || ctx.ip;
+        ipAddress = (ctx.ips && ctx.ips.length ? ctx.ips.join('-') : undefined) || ctx.ip || '';
       }
     }
 
@@ -39,7 +39,14 @@ module.exports = (options) => {
       }
     }
 
-    const redisKey = `${prefix}:${ipAddress}:${userId}:${request.method}:${request.path}`;
+    let deviceId = '';
+    if (config.limitRequest.deviceIdEnable) {
+      if (options.hasOwnProperty('deviceIdEnable') && options.deviceIdEnable) {
+        deviceId = request.headers['device-uuid'] || '';
+      }
+    }
+
+    const redisKey = `${prefix}:${ipAddress}:${deviceId}:${userId}:${request.method}:${request.path}`;
 
     const lastTime = yield redis.get(redisKey);
     const currentTime = new Date().getTime();
