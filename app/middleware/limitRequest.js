@@ -7,6 +7,10 @@ module.exports = (options = {}) => {
   return async function(ctx, next) {
     const prefix = ctx.app.config.limitRequest.redisPrefix || 'limit';
     const limitTime = ms(options.limitTime || ctx.app.config.limitRequest.limitTime || '5m');
+    if (limitTime === 0) { //  不限制
+      await next();
+      return;
+    }
 
     const { logger, request } = ctx;
     const { redis, config } = ctx.app;
