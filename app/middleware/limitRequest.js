@@ -1,12 +1,12 @@
 'use strict';
 
 const ms = require('ms');
+const crypto = require('crypto');
 
 module.exports = (options = {}) => {
   return async function(ctx, next) {
     const prefix = ctx.app.config.limitRequest.redisPrefix || 'limit';
-    let limitTime = options.limitTime || ctx.app.config.limitRequest.limitTime || '5m';
-    limitTime = ms(limitTime);
+    const limitTime = ms(options.limitTime || ctx.app.config.limitRequest.limitTime || '5m');
 
     const { logger, request } = ctx;
     const { redis, config } = ctx.app;
@@ -46,13 +46,16 @@ module.exports = (options = {}) => {
       }
     }
 
-    const redisKey = `${prefix}:${ipAddress}:${deviceId}:${userId}:${request.method}:${request.path}`;
+    const limitContent = `${ipAddress}:${deviceId}:${userId}:${request.method}:${request.path}`;
+    const hashLimitContent = crypto.createHash('md5').update(limitContent).digest('hex');
+
+    const redisKey = `${prefix}:${hashLimitContent}`;
 
     const lastTime = await redis.get(redisKey);
     const currentTime = new Date().getTime();
     const timePassed = currentTime - lastTime;
     if (timePassed < limitTime) {
-      logger.info(`校验 ${redisKey} 请求, 被限频不通过 limitTime: ${limitTime} timePassed: ${timePassed}`);
+      logger.info(`校验 ${redisKey} 请求, 被限频不通过 limitTime: ${limitTime} timePassed: ${timePassed} limitContent: ${limitContent}`);
       ctx.formatFailResp({ errCode: 'F429', msg: options.errorMsg || config.limitRequest.errorMsg });
       return;
     }
