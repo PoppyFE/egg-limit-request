@@ -64,8 +64,10 @@ module.exports = (options = {}) => {
       return;
     }
 
-    await redis.set(redisKey, currentTime, 'EX', limitTime * 0.001);
-
     await next();
+
+    if (ctx.isSuccessResp()) {
+      await redis.set(redisKey, currentTime, 'EX', limitTime * 0.001);
+    }
   };
 };
