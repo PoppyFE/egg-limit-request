@@ -68,6 +68,7 @@ module.exports = (options = {}) => {
 
     if (ctx.isSuccessResp()) {
       await redis.set(redisKey, currentTime, 'EX', limitTime * 0.001);
+      logger.info(`限频 ${limitContent} 有效期 ${limitTime}`);
     }
   };
 };
