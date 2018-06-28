@@ -50,25 +50,31 @@ module.exports = (options = {}) => {
       }
     }
 
-    const limitContent = `${ipAddress}:${deviceId}:${userId}:${request.method}:${request.path}`;
+    // 一次会话限制频率， 可能是同一个接口，可能是多个接口，多个接口需要指定 sessionPath
+    const sessionPath = options.sessionPath || `${request.method}:${request.path}`;
+    const limitContent = `${ipAddress}:${deviceId}:${userId}:${sessionPath}`;
     const hashLimitContent = crypto.createHash('md5').update(limitContent).digest('hex');
-
     const redisKey = `${prefix}:${hashLimitContent}`;
-
+    const sessionStep = options.sessionStep;
     const lastTime = await redis.get(redisKey);
     const currentTime = new Date().getTime();
-    const timePassed = currentTime - lastTime;
-    if (timePassed < limitTime) {
-      logger.info(`校验 ${redisKey} 请求, 被限频不通过 limitTime: ${limitTime} timePassed: ${timePassed} limitContent: ${limitContent}`);
-      ctx.formatFailResp({ errCode: 'F429', msg: options.errorMsg || config.limitRequest.errorMsg });
-      return;
+
+    if (!sessionStep || sessionStep === 'start') {
+      const timePassed = currentTime - lastTime;
+      if (timePassed < limitTime) {
+        logger.info(`校验 ${redisKey} 请求, 被限频不通过 limitTime: ${limitTime} timePassed: ${timePassed} limitContent: ${limitContent}`);
+        ctx.formatFailResp({ errCode: 'F429', msg: options.errorMsg || config.limitRequest.errorMsg });
+        return;
+      }
     }
 
     await next();
 
-    if (ctx.isSuccessResp()) {
-      await redis.set(redisKey, currentTime, 'EX', limitTime * 0.001);
-      logger.info(`限频 ${limitContent} 有效期 ${limitTime}`);
+    if (!sessionStep || sessionStep === 'end') {
+      if (ctx.isSuccessResp()) {
+        await redis.set(redisKey, currentTime, 'EX', limitTime * 0.001);
+        logger.info(`限频 ${limitContent} 有效期 ${limitTime}`);
+      }
     }
   };
 };
